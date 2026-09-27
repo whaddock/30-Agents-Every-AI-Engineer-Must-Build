@@ -183,9 +183,17 @@ def get_llm(provider="openai", model=None, api_key=None, temperature=0, **kwargs
 
     elif provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
+        # Same issue as chat_completion()'s anthropic branch: Claude
+        # Sonnet 5 / Opus 4.7+ reject any explicit temperature value
+        # (including the default 0) with a 400 error, and
+        # anthropic-sdk-python 1.0 dropped the parameter client-side
+        # too. This helper never needed fine sampling control for the
+        # deterministic educational use cases in this book, so
+        # temperature is simply not forwarded to ChatAnthropic at all —
+        # consistent with the same fix already applied to
+        # chat_completion()'s anthropic branch.
         return ChatAnthropic(
             model=model,
-            temperature=temperature,
             api_key=api_key or os.getenv("ANTHROPIC_API_KEY"),
             **kwargs,
         )
